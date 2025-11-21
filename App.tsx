@@ -110,7 +110,7 @@ const App: React.FC = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
               </svg>
             </div>
-            <h1 className="font-bold text-xl tracking-tight">DocuGen <span className="text-indigo-400 font-mono text-sm">Flash</span></h1>
+            <h1 className="font-bold text-xl tracking-tight">SmartCommenter</h1>
           </div>
           
           <div className="flex items-center gap-4">
