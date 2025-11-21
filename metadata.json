@@ -1,0 +1,5 @@
+{
+  "name": "Copy of DocuGen Flash",
+  "description": "A smart, lightweight code-comment generator using Gemini 2.5 Flash. Features automated comment generation, plausibility scoring, and reference comparison metrics (ROUGE-proxy).",
+  "requestFramePermissions": []
+}
