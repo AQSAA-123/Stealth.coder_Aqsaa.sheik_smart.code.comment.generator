@@ -18,14 +18,24 @@ const schema: Schema = {
       type: Type.STRING,
       description: "A brief explanation of why this comment was generated in this specific way.",
     },
+    errorAnalysis: {
+      type: Type.OBJECT,
+      properties: {
+        hasErrors: { type: Type.BOOLEAN, description: "True if the code contains syntax errors or significant logical bugs." },
+        description: { type: Type.STRING, description: "Brief description of the error if found, otherwise empty string." },
+        correctedCode: { type: Type.STRING, description: "The corrected full code snippet if errors were found, otherwise empty string." }
+      },
+      required: ["hasErrors", "description", "correctedCode"]
+    }
   },
-  required: ["comment", "plausibilityScore", "reasoning"],
+  required: ["comment", "plausibilityScore", "reasoning", "errorAnalysis"],
 };
 
 export const generateCodeComment = async (
   code: string,
   language: string,
-  style: CommentStyle
+  style: CommentStyle,
+  includeErrorAnalysis: boolean = false
 ): Promise<CommentResult> => {
   try {
     const styleInstructions = {
@@ -38,15 +48,21 @@ export const generateCodeComment = async (
     const prompt = `
       You are an expert software engineer and documentation specialist.
       
-      Task: Generate a ${style} comment for the provided ${language} function code.
+      Task: 
+      1. Generate a ${style} comment for the provided ${language} function code.
+      ${includeErrorAnalysis ? '2. Analyze the code for potential syntax errors or logical bugs.' : '2. Do NOT analyze for errors.'}
       
-      Instruction: ${styleInstructions[style]}
+      Instruction for Comment: ${styleInstructions[style]}
       
       Rules:
       1. Adhere strictly to the requested Style.
       2. For 'Docstring', format the internal content correctly (e.g., @param for JSDoc), but exclude the enclosing syntax.
       3. For 'Concise' or 'Inline', do not use bullet points, just plain text.
       4. Assess your own confidence/plausibility score (0-100) based on how well-formed the function is and how accurate your summary is.
+      ${includeErrorAnalysis 
+        ? '5. If the code has errors, set hasErrors to true in errorAnalysis, describe the error, and provide a fixed version of the code. If no errors, set hasErrors to false.' 
+        : '5. Set errorAnalysis.hasErrors to false, description to "", and correctedCode to "".'
+      }
       
       Code Input:
       \`\`\`${language}

@@ -1,7 +1,14 @@
+export interface ErrorAnalysis {
+  hasErrors: boolean;
+  description: string;
+  correctedCode: string;
+}
+
 export interface CommentResult {
   comment: string;
   plausibilityScore: number; // Model's self-assessed confidence/plausibility (0-100)
   reasoning: string; // Why the model chose this comment
+  errorAnalysis: ErrorAnalysis;
 }
 
 export interface MetricsData {

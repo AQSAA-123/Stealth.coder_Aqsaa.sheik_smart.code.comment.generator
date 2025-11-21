@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { CodeEditor } from './components/CodeEditor';
 import { MetricsDisplay } from './components/MetricsDisplay';
+import { ErrorAnalysisDisplay } from './components/ErrorAnalysisDisplay';
 import { generateCodeComment } from './services/geminiService';
 import { CommentResult, MetricsData, Language, CommentStyle, HistoryItem } from './types';
 import { calculateTokenOverlap, calculateLengthRatio, truncateCode } from './utils/metrics';
@@ -10,6 +11,7 @@ const App: React.FC = () => {
   const [reference, setReference] = useState<string>('');
   const [language, setLanguage] = useState<Language>(Language.JavaScript);
   const [style, setStyle] = useState<CommentStyle>(CommentStyle.Concise);
+  const [checkErrors, setCheckErrors] = useState<boolean>(false);
   
   const [result, setResult] = useState<CommentResult | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -32,7 +34,7 @@ const App: React.FC = () => {
     setHumanScore(null);
 
     try {
-      const generatedData = await generateCodeComment(code, language, style);
+      const generatedData = await generateCodeComment(code, language, style, checkErrors);
       setResult(generatedData);
 
       // Calculate initial metrics if reference exists
@@ -58,7 +60,7 @@ const App: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [code, language, style, reference]);
+  }, [code, language, style, reference, checkErrors]);
 
   // Recalculate metrics if reference changes after generation
   useEffect(() => {
@@ -162,6 +164,20 @@ const App: React.FC = () => {
                     ))}
                   </div>
               </div>
+
+              {/* Error Check Toggle */}
+              <div 
+                className="bg-gray-900/50 border border-gray-800 p-3 rounded-xl flex flex-col justify-center cursor-pointer group min-w-[100px]"
+                onClick={() => setCheckErrors(!checkErrors)}
+              >
+                  <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 block cursor-pointer">Diagnostics</label>
+                  <div className="flex items-center gap-2">
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${checkErrors ? 'bg-indigo-600 border-indigo-600' : 'bg-gray-800 border-gray-600 group-hover:border-gray-500'}`}>
+                          {checkErrors && <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>}
+                      </div>
+                      <span className={`text-xs font-medium transition-colors ${checkErrors ? 'text-white' : 'text-gray-400 group-hover:text-gray-300'}`}>Find Bugs</span>
+                  </div>
+              </div>
           </div>
 
           <div className="bg-gray-900/50 border border-gray-800 p-1 rounded-xl">
@@ -256,6 +272,9 @@ const App: React.FC = () => {
                 setHumanScore={setHumanScore}
               />
 
+              {/* Error Analysis - Displayed below metrics if errors found */}
+              <ErrorAnalysisDisplay analysis={result.errorAnalysis} />
+
             </div>
           ) : (
              <div className="h-full flex flex-col">
@@ -274,7 +293,6 @@ const App: React.FC = () => {
                             {history.map(item => (
                                 <div key={item.id} className="p-3 bg-gray-800 rounded border border-gray-700 hover:border-indigo-500/50 transition-colors cursor-pointer" onClick={() => {
                                     setCode(item.codeSnippet);
-                                    // To fully restore, we'd need to store more stats, but code is enough for re-gen
                                     if (item.style) setStyle(item.style);
                                 }}>
                                     <div className="flex justify-between items-start mb-1">
