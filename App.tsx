@@ -53,8 +53,8 @@ const App: React.FC = () => {
           style: style
       }, ...prev.slice(0, 4)]); // Keep last 5
 
-    } catch (err) {
-      setError("Failed to generate comment. Please check your API key and try again.");
+    } catch (err: any) {
+      setError(err.message || "An unexpected error occurred.");
     } finally {
       setLoading(false);
     }

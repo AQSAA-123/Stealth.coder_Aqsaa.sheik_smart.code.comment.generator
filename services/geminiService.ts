@@ -71,8 +71,30 @@ export const generateCodeComment = async (
 
     const result = JSON.parse(text) as CommentResult;
     return result;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error generating comment:", error);
-    throw error;
+    
+    let customMessage = "An unexpected error occurred while generating the comment.";
+    
+    if (error.message) {
+      const msg = error.message.toLowerCase();
+      if (msg.includes("400") || msg.includes("invalid argument") || msg.includes("api key")) {
+        customMessage = "Invalid Request. Please check your API key and ensure the code input is valid.";
+      } else if (msg.includes("403") || msg.includes("permission denied")) {
+        customMessage = "Access Denied. Your API key may lack permissions or be invalid.";
+      } else if (msg.includes("429") || msg.includes("resource exhausted") || msg.includes("quota")) {
+        customMessage = "Quota Exceeded. You are sending requests too quickly. Please wait a moment.";
+      } else if (msg.includes("500") || msg.includes("internal") || msg.includes("503") || msg.includes("unavailable")) {
+        customMessage = "Gemini Service Error. The model is currently overloaded or experiencing issues. Try again later.";
+      } else if (msg.includes("fetch failed") || msg.includes("network")) {
+        customMessage = "Network Error. Please check your internet connection.";
+      } else if (msg.includes("safety")) {
+        customMessage = "Content blocked due to safety settings. The code may contain sensitive or prohibited content.";
+      } else {
+        customMessage = error.message;
+      }
+    }
+    
+    throw new Error(customMessage);
   }
 };
